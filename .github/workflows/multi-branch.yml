@@ -1,0 +1,35 @@
+name: 🤖 Multi-branch-madness
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: CI Build
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Checkout the config branch
+      uses: actions/checkout@v4
+      with:
+        ref: 'configs'
+        path: configs_branch
+
+    - name: Test Checkout
+      run: |
+        pwd
+        ls -la
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v2
+      with:
+        terraform_version: "1.5.3"
+
+    - name: Apply Templating
+      working-directory: terraform
+      run: |
+        terraform init
+        terraform plan -var 'config_path=../configs_branch/configs'
