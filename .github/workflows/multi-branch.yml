@@ -8,8 +8,8 @@ permissions:
   issues: write
 
 jobs:
-  build:
-    name: Multi branch
+  plan:
+    name: Terraform Plan
     runs-on: ubuntu-latest
 
     steps:
@@ -32,15 +32,34 @@ jobs:
         run: |
           terraform init
           terraform plan -var 'config_path=../configs_branch/configs'
-      
-      # ${{ secrets.GITHUB_TOKEN }}
-      - name: Approval step
-        uses: trstringer/manual-approval@v1
-        with:
-          secret: ${{ github.TOKEN }}
-          approvers: phzietsman
 
       - name: Deploy Templating
         working-directory: terraform
         run: |
+          terraform apply -var 'config_path=../configs_branch/configs' -auto-approve
+
+  apply:
+    name: Terraform Apply
+    runs-on: ubuntu-latest
+    environment: 'deployment'
+
+    steps:
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: "1.5.3"
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Checkout the config branch
+        uses: actions/checkout@v4
+        with:
+          ref: 'configs'
+          path: configs_branch
+
+      - name: Apply Templating
+        working-directory: terraform
+        run: |
+          terraform init
           terraform apply -var 'config_path=../configs_branch/configs' -auto-approve
