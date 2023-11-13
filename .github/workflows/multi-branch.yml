@@ -5,10 +5,16 @@ on:
 
 jobs:
   build:
-    name: CI Build
+    name: Multi branch
     runs-on: ubuntu-latest
 
     steps:
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v2
+      with:
+        terraform_version: "1.5.3"
+
     - name: Checkout code
       uses: actions/checkout@v4
     
@@ -18,18 +24,19 @@ jobs:
         ref: 'configs'
         path: configs_branch
 
-    - name: Test Checkout
-      run: |
-        pwd
-        ls -la
-
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v2
-      with:
-        terraform_version: "1.5.3"
-
     - name: Apply Templating
       working-directory: terraform
       run: |
         terraform init
         terraform plan -var 'config_path=../configs_branch/configs'
+    
+    - name: Approval step
+      uses: trstringer/manual-approval@v1
+        with:
+          secret: ${{ github.TOKEN }}
+          approvers: phzietsman
+
+    - name: Deploy Templating
+      working-directory: terraform
+      run: |
+        terraform apply -var 'config_path=../configs_branch/configs' -auto-approve
