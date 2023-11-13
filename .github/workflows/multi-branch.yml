@@ -3,6 +3,9 @@ name: 🤖 Multi-branch-madness
 on:
   workflow_dispatch:
 
+permissions:
+  issues: write
+
 jobs:
   build:
     name: Multi branch
@@ -29,6 +32,7 @@ jobs:
           terraform init
           terraform plan -var 'config_path=../configs_branch/configs'
       
+      # ${{ secrets.GITHUB_TOKEN }}
       - name: Approval step
         uses: trstringer/manual-approval@v1
         with:
